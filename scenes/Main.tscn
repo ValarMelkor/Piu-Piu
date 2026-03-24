@@ -1,0 +1,146 @@
+[gd_scene load_steps=21 format=3]
+
+[ext_resource type="Script" path="res://scripts/systems/main.gd" id="1_main"]
+[ext_resource type="Script" path="res://scripts/systems/dome_arena.gd" id="2_dome_script"]
+[ext_resource type="Script" path="res://scripts/systems/player_turret.gd" id="3_turret_script"]
+[ext_resource type="Script" path="res://scripts/systems/camera_rig.gd" id="4_camera_script"]
+[ext_resource type="Script" path="res://scripts/systems/projectile_manager.gd" id="5_projectile_manager_script"]
+[ext_resource type="PackedScene" path="res://scenes/Projectile.tscn" id="6_projectile_scene"]
+[ext_resource type="Script" path="res://scripts/systems/target_manager.gd" id="7_target_manager_script"]
+[ext_resource type="PackedScene" path="res://scenes/Target.tscn" id="8_target_scene"]
+[ext_resource type="Script" path="res://scripts/ui/hud.gd" id="9_hud_script"]
+[ext_resource type="Script" path="res://scripts/ui/debug_overlay.gd" id="10_debug_script"]
+[ext_resource type="Script" path="res://scripts/systems/metrics_recorder.gd" id="11_metrics_script"]
+[ext_resource type="Resource" path="res://resources/world_config.tres" id="12_world_config"]
+[ext_resource type="Resource" path="res://resources/turret_config.tres" id="13_turret_config"]
+[ext_resource type="Resource" path="res://resources/camera_config.tres" id="14_camera_config"]
+[ext_resource type="Resource" path="res://resources/projectile_config.tres" id="15_projectile_config"]
+[ext_resource type="Resource" path="res://resources/target_config.tres" id="16_target_config"]
+[ext_resource type="Resource" path="res://resources/spawn_config.tres" id="17_spawn_config"]
+
+[sub_resource type="StandardMaterial3D" id="floor_mat"]
+albedo_color = Color(0.08, 0.1, 0.12, 1)
+roughness = 0.9
+
+[sub_resource type="StandardMaterial3D" id="dome_mat"]
+albedo_color = Color(0.06, 0.18, 0.24, 0.22)
+transparency = 1
+cull_mode = 2
+
+[sub_resource type="BoxMesh" id="turret_base_mesh"]
+size = Vector3(6, 4, 6)
+
+[node name="Main" type="Node3D"]
+script = ExtResource("1_main")
+world_config = ExtResource("12_world_config")
+turret_config = ExtResource("13_turret_config")
+camera_config = ExtResource("14_camera_config")
+projectile_config = ExtResource("15_projectile_config")
+target_config = ExtResource("16_target_config")
+spawn_config = ExtResource("17_spawn_config")
+
+[node name="WorldRoot" type="Node3D" parent="."]
+
+[node name="DomeArena" type="Node3D" parent="WorldRoot"]
+script = ExtResource("2_dome_script")
+world_config = ExtResource("12_world_config")
+
+[node name="Floor" type="MeshInstance3D" parent="WorldRoot/DomeArena"]
+material_override = SubResource("floor_mat")
+
+[node name="Dome" type="MeshInstance3D" parent="WorldRoot/DomeArena"]
+material_override = SubResource("dome_mat")
+
+[node name="ScaleMarkers" type="Node3D" parent="WorldRoot/DomeArena"]
+
+[node name="TurretRoot" type="Node3D" parent="WorldRoot"]
+
+[node name="PlayerTurret" type="Node3D" parent="WorldRoot/TurretRoot"]
+script = ExtResource("3_turret_script")
+turret_config = ExtResource("13_turret_config")
+
+[node name="YawBase" type="Node3D" parent="WorldRoot/TurretRoot/PlayerTurret"]
+
+[node name="BaseVisual" type="MeshInstance3D" parent="WorldRoot/TurretRoot/PlayerTurret/YawBase"]
+mesh = SubResource("turret_base_mesh")
+
+[node name="PitchPivot" type="Node3D" parent="WorldRoot/TurretRoot/PlayerTurret/YawBase"]
+position = Vector3(0, 2, 0)
+
+[node name="Barrel" type="MeshInstance3D" parent="WorldRoot/TurretRoot/PlayerTurret/YawBase/PitchPivot"]
+mesh = SubResource("turret_base_mesh")
+position = Vector3(0, 0, -10)
+scale = Vector3(0.3, 0.2, 3)
+
+[node name="Muzzle" type="Marker3D" parent="WorldRoot/TurretRoot/PlayerTurret/YawBase/PitchPivot"]
+position = Vector3(0, 0, -20)
+
+[node name="CameraRig" type="Node3D" parent="WorldRoot"]
+script = ExtResource("4_camera_script")
+camera_config = ExtResource("14_camera_config")
+
+[node name="CombatAnchor" type="Marker3D" parent="WorldRoot/CameraRig"]
+position = Vector3(0, 4, 6)
+rotation = Vector3(-0.06, 3.14159, 0)
+
+[node name="TacticalAnchor" type="Marker3D" parent="WorldRoot/CameraRig"]
+position = Vector3(0, 130, 220)
+rotation = Vector3(-0.42, 3.14159, 0)
+
+[node name="Camera3D" type="Camera3D" parent="WorldRoot/CameraRig"]
+current = true
+fov = 75.0
+near = 0.1
+far = 2000.0
+
+[node name="ProjectileManager" type="Node3D" parent="WorldRoot"]
+script = ExtResource("5_projectile_manager_script")
+projectile_scene = ExtResource("6_projectile_scene")
+
+[node name="TargetManager" type="Node3D" parent="WorldRoot"]
+script = ExtResource("7_target_manager_script")
+target_scene = ExtResource("8_target_scene")
+
+[node name="DebugDraw" type="Node3D" parent="WorldRoot"]
+
+[node name="Sun" type="DirectionalLight3D" parent="WorldRoot"]
+rotation = Vector3(-0.7, -0.5, 0)
+light_energy = 1.4
+
+[node name="FillLight" type="OmniLight3D" parent="WorldRoot"]
+position = Vector3(0, 40, 0)
+light_energy = 80000.0
+omni_range = 800.0
+
+[node name="UI" type="CanvasLayer" parent="."]
+
+[node name="HUD" type="CanvasLayer" parent="UI"]
+script = ExtResource("9_hud_script")
+
+[node name="MarginContainer" type="MarginContainer" parent="UI/HUD"]
+anchors_preset = 0
+offset_left = 8.0
+offset_top = 8.0
+offset_right = 460.0
+offset_bottom = 240.0
+
+[node name="StatsLabel" type="Label" parent="UI/HUD/MarginContainer"]
+autowrap_mode = 0
+
+[node name="DebugOverlay" type="CanvasLayer" parent="UI"]
+script = ExtResource("10_debug_script")
+
+[node name="MarginContainer" type="MarginContainer" parent="UI/DebugOverlay"]
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -430.0
+offset_top = 8.0
+offset_right = -8.0
+offset_bottom = 380.0
+
+[node name="DebugLabel" type="Label" parent="UI/DebugOverlay/MarginContainer"]
+autowrap_mode = 0
+
+[node name="MetricsRecorder" type="Node" parent="."]
+script = ExtResource("11_metrics_script")

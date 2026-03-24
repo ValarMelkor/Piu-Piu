@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="TurretConfig" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/config/turret_config.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+yaw_total_deg = 180.0
+pitch_min_deg = 0.0
+pitch_max_deg = 85.0
+yaw_speed_deg_per_sec = 80.0
+pitch_speed_deg_per_sec = 65.0
+mouse_sensitivity_deg = 0.12
+use_smoothing = true
+smoothing_speed = 10.0
+fire_interval_sec = 0.12
